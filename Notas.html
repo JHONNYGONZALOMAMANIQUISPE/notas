@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Portal de Calificaciones</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #6a11cb, #2575fc);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .container {
+      background: #fff;
+      padding: 25px;
+      border-radius: 15px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+    h2, h3 {
+      color: #333;
+    }
+    input, select {
+      width: 80%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 15px;
+    }
+    button {
+      background: #2575fc;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #1a5edb;
+    }
+    .result, .admin-panel {
+      margin-top: 20px;
+      text-align: left;
+    }
+    .grade-card {
+      background: #f5f7ff;
+      padding: 12px;
+      margin: 6px 0;
+      border-radius: 8px;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+    .grade-card strong {
+      color: #2575fc;
+    }
+    .error {
+      color: red;
+      margin-top: 10px;
+    }
+    .success {
+      color: green;
+      margin-top: 10px;
+    }
+    .tabs {
+      margin-bottom: 15px;
+    }
+    .tabs button {
+      margin: 5px;
+      padding: 10px 15px;
+      border-radius: 8px;
+      background: #eee;
+      color: #333;
+      font-weight: bold;
+    }
+    .tabs button.active {
+      background: #2575fc;
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Portal de Calificaciones</h2>
+    <div class="tabs">
+      <button class="active" onclick="mostrarSeccion('estudiante')">Estudiante</button>
+      <button onclick="mostrarSeccion('admin')">Docente</button>
+    </div>
+
+    <!-- Sección Estudiante -->
+    <div id="estudiante" class="seccion">
+      <p>Ingresa tu código asignado:</p>
+      <input type="text" id="codigoEst" placeholder="Ej: STU123">
+      <br>
+      <button onclick="consultarNota()">Ver Calificaciones</button>
+      <div class="error" id="errorEst"></div>
+      <div class="result" id="resultadoEst"></div>
+    </div>
+
+    <!-- Sección Admin -->
+    <div id="admin" class="seccion" style="display:none;">
+      <p>Clave de acceso:</p>
+      <input type="password" id="claveAdmin" placeholder="Clave de docente">
+      <br>
+      <button onclick="validarAdmin()">Ingresar</button>
+      <div class="error" id="errorAdmin"></div>
+      <div class="admin-panel" id="panelAdmin" style="display:none;">
+        <h3>Gestión de Calificaciones</h3>
+        <input type="text" id="codigoNuevo" placeholder="Código Estudiante (Ej: STU999)">
+        <input type="text" id="nombreNuevo" placeholder="Nombre del Estudiante">
+        <input type="text" id="materia" placeholder="Materia (Ej: Matemática)">
+        <input type="number" id="nota" placeholder="Nota (0-100)">
+        <br>
+        <button onclick="agregarActualizar()">Agregar/Actualizar</button>
+        <div id="mensajeAdmin"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Base de datos simulada
+    const estudiantes = {
+      "STU123": {nombre: "Ana Pérez", notas: {Matemática: 85, Física: 90, Química: 78}},
+      "STU456": {nombre: "Carlos Gómez", notas: {Matemática: 72, Física: 68, Química: 80}},
+      "STU789": {nombre: "María López", notas: {Matemática: 95, Física: 88, Química: 92}},
+      "STU321": {nombre: "Juan Torres", notas: {Matemática: 60, Física: 70, Química: 65}}
+    };
+
+    const claveDocente = "1234"; // Clave maestra del docente
+
+    function mostrarSeccion(seccion) {
+      document.querySelectorAll('.seccion').forEach(s => s.style.display = "none");
+      document.getElementById(seccion).style.display = "block";
+
+      document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+      if (seccion === "estudiante") {
+        document.querySelectorAll('.tabs button')[0].classList.add('active');
+      } else {
+        document.querySelectorAll('.tabs button')[1].classList.add('active');
+      }
+    }
+
+    // Estudiante consulta notas
+    function consultarNota() {
+      const codigo = document.getElementById("codigoEst").value.trim().toUpperCase();
+      const errorDiv = document.getElementById("errorEst");
+      const resultadoDiv = document.getElementById("resultadoEst");
+
+      resultadoDiv.innerHTML = "";
+      errorDiv.textContent = "";
+
+      if (estudiantes[codigo]) {
+        const estudiante = estudiantes[codigo];
+        let html = `<h3>Bienvenido, ${estudiante.nombre}</h3>`;
+        for (let materia in estudiante.notas) {
+          html += `
+            <div class="grade-card">
+              <strong>${materia}:</strong> ${estudiante.notas[materia]} / 100
+            </div>
+          `;
+        }
+        resultadoDiv.innerHTML = html;
+      } else {
+        errorDiv.textContent = "❌ Código no válido.";
+      }
+    }
+
+    // Validar clave de administrador
+    function validarAdmin() {
+      const clave = document.getElementById("claveAdmin").value;
+      const errorDiv = document.getElementById("errorAdmin");
+      const panel = document.getElementById("panelAdmin");
+
+      if (clave === claveDocente) {
+        errorDiv.textContent = "";
+        panel.style.display = "block";
+      } else {
+        errorDiv.textContent = "❌ Clave incorrecta.";
+        panel.style.display = "none";
+      }
+    }
+
+    // Agregar o actualizar calificaciones
+    function agregarActualizar() {
+      const codigo = document.getElementById("codigoNuevo").value.trim().toUpperCase();
+      const nombre = document.getElementById("nombreNuevo").value.trim();
+      const materia = document.getElementById("materia").value.trim();
+      const nota = parseInt(document.getElementById("nota").value);
+      const mensajeDiv = document.getElementById("mensajeAdmin");
+
+      if (!codigo || !nombre || !materia || isNaN(nota)) {
+        mensajeDiv.innerHTML = "<p class='error'>⚠️ Completa todos los campos correctamente.</p>";
+        return;
+      }
+
+      if (!estudiantes[codigo]) {
+        estudiantes[codigo] = {nombre: nombre, notas: {}};
+      }
+      estudiantes[codigo].nombre = nombre;
+      estudiantes[codigo].notas[materia] = nota;
+
+      mensajeDiv.innerHTML = "<p class='success'>✅ Calificación registrada con éxito.</p>";
+    }
+  </script>
+</body>
+</html>
